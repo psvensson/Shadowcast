@@ -60,6 +60,6 @@ ShadowCastRow >> tiles [
 	rv := OrderedCollection new.
 	minCol := ShadowCast roundTiesUp: depth * startSlope.
 	maxCol := ShadowCast roundTiesDown: depth * endSlope.
-	minCol  to: maxCol + 1  do: [ :col | rv add: depth @ col ].
+	minCol  to: maxCol  do: [ :col | rv add: depth @ col ].
 	^ rv
 ]

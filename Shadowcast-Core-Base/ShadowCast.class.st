@@ -29,15 +29,18 @@ ShadowCast class >> slope: tile [
 	^ Fraction numerator: 2 * col -1  denominator: (2 * rowDepth)
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 ShadowCast >> computeFov: origin [
-
 	markVisible value: origin.
 	Transcript
 		show: 'computeFov from origin ' , origin asString;
 		cr.
-	0 to: 3 do: [ :i | 
-		| quadrant firstRow |
+	0 to: 3 do: [ :i | self computeFovFor: origin quadrant: i ]
+]
+
+{ #category : #accessing }
+ShadowCast >> computeFovFor: origin quadrant: i [
+	| quadrant firstRow |
 		quadrant := ShadowCastQuadrant new
 			            cardinal: i;
 			            origin: origin.
@@ -46,7 +49,7 @@ ShadowCast >> computeFov: origin [
 			            startSlope: (Fraction numerator: -1 denominator: 1);
 			            endSlope: (Fraction numerator: 1 denominator: 1).
 			Transcript show:'caling scan on quadrant ',i asString;cr.
-		self scan: firstRow quadrant: quadrant ]
+		self scan: firstRow quadrant: quadrant
 ]
 
 { #category : #accessing }
@@ -65,7 +68,7 @@ ShadowCast >> isFloor: tile quadrant: quadrant [
 	tile ifNil: [ ^ false ].
 	point := quadrant transform: tile.
 	"Transcript show:'isFloor called for ',tile asString;cr."
-	^ (isBlocking  value: tile) not
+	^ (isBlocking  value:point) not
 ]
 
 { #category : #accessing }
@@ -78,13 +81,13 @@ ShadowCast >> isSymmetric: row tile: tile [
 	^ (col >= (row depth * (row startSlope))) and: (col <= (row depth * (row endSlope)))
 ]
 
-{ #category : #'as yet unclassified' }
+{ #category : #accessing }
 ShadowCast >> isWall: tile quadrant: quadrant [
 	| point rv |
 	tile ifNil: [ ^ false ].
 	point := quadrant transform: tile.
 	rv := self isBlocking value: point.
-	"Transcript show:'isWall for ',tile asString,' got ',rv asString;cr."
+	Transcript show:'isWall for ',point asString,' got ',rv asString;cr.
 	^ rv.
 ]
 
@@ -131,23 +134,83 @@ ShadowCast >> reveal: tile quadrant: quadrant [
 
 { #category : #scanning }
 ShadowCast >> scan: row quadrant: quadrant [
-
 	| prevTile |
-	"Transcript show:'scan for quadrant ',quadrant asString,' row ', row asString;cr."
+	Transcript
+		show:
+			'----- scan for quadrant ' , quadrant asString , ' row '
+				, row asString;
+		cr.
 	prevTile := nil.
-	row tiles do: [ :tile | 
-		(self shouldReveal: tile row: row quadrant: quadrant) ifTrue: [ 
-			self reveal: tile quadrant: quadrant ].
-		(self passedWall: tile prevTile: prevTile row: row quadrant: quadrant) ifTrue: [ 
-			row startSlope: (self class slope: tile) ].
-		(self passedFloor: tile prevTile: prevTile row: row quadrant: quadrant) ifTrue: [ 
-			| nextRow |
+	row tiles
+		do: [ :tile | 
+			(self shouldReveal: tile row: row quadrant: quadrant)
+				ifTrue: [ self reveal: tile quadrant: quadrant ].
+			(self
+				passedWall: tile
+				prevTile: prevTile
+				row: row
+				quadrant: quadrant)
+				ifTrue: [ row startSlope: (self class slope: tile) ].
+			(self
+				passedFloor: tile
+				prevTile: prevTile
+				row: row
+				quadrant: quadrant)
+				ifTrue: [ | nextRow |
+					row depth < radius
+						ifTrue: [ nextRow := row next.
+							nextRow endSlope: (self class slope: tile).
+							self scan: nextRow quadrant: quadrant ] ].
+			prevTile := tile ].
+	((self isFloor: prevTile quadrant: quadrant) and: row depth < radius)
+		ifTrue: [ | nextRow |
 			nextRow := row next.
-			nextRow endSlope: (self class slope: tile).
-			self scan: nextRow quadrant: quadrant ].
-		prevTile := tile.
-		((self isFloor: prevTile quadrant: quadrant) and: row depth < radius) 
-			ifTrue: [ self scan: row next quadrant: quadrant ] ]
+			self scan: nextRow quadrant: quadrant ]
+]
+
+{ #category : #accessing }
+ShadowCast >> shadowCasterOn: aView [
+	<gtView>
+	^ aView explicit
+		title: 'Details' translated;
+		priority: 5;
+		stencil:
+				[ | container verticalContainer detailsTextContainer avatarContainer nameTextContainer details |
+			container := BlElement new
+				layout: BlLinearLayout horizontal;
+				background: Color white;
+				look: BrShadowLook;
+				margin: (BlInsets all: 20);
+				constraintsDo: [ :c | 
+					c horizontal fitContent.
+					c vertical fitContent ].
+			detailsTextContainer := BrEditor new
+				look: (BrGlamorousRegularEditorLook new fontSize: 16);
+				text: details;
+				constraintsDo: [ :c | 
+					c horizontal matchParent.
+					c vertical matchParent ].
+			verticalContainer := BlElement new
+				layout: BlLinearLayout vertical;
+				margin: (BlInsets all: 10);
+				constraintsDo: [ :c | 
+					c horizontal matchParent.
+					c vertical matchParent ].
+			nameTextContainer := BlTextElement new
+				constraintsDo: [ :c | c horizontal matchParent ];
+				margin:
+					(BlInsets
+						top: 5
+						right: 0
+						bottom: 20
+						left: 5);
+				text:
+					('Foobar' asRopedText glamorousRegularFont
+						fontSize: 30;
+						foreground: Color black).
+			verticalContainer addChild: nameTextContainer.
+			container addChild: verticalContainer.
+			container ]
 ]
 
 { #category : #accessing }
