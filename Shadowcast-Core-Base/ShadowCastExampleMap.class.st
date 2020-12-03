@@ -1,3 +1,7 @@
+"
+${example:ShadowCastExampleMap>>#exampleMap}$
+
+"
 Class {
 	#name : #ShadowCastExampleMap,
 	#superclass : #Object,
