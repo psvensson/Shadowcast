@@ -8,7 +8,7 @@ Class {
 BaselineOfShadowCast >> baseline: spec [
 
 	<baseline>
-	spec for: #common do: [ spec package: 'Golgotterath-Core' ]
+	spec for: #common do: [ spec package: 'Shadowcast-Core-Base' ]
 ]
 
 { #category : #baselines }
