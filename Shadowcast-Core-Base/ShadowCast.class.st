@@ -87,7 +87,7 @@ ShadowCast >> isWall: tile quadrant: quadrant [
 	tile ifNil: [ ^ false ].
 	point := quadrant transform: tile.
 	rv := self isBlocking value: point.
-	Transcript show:'isWall for ',point asString,' got ',rv asString;cr.
+	"Transcript show:'isWall for ',point asString,' got ',rv asString;cr."
 	^ rv.
 ]
 
@@ -135,11 +135,11 @@ ShadowCast >> reveal: tile quadrant: quadrant [
 { #category : #scanning }
 ShadowCast >> scan: row quadrant: quadrant [
 	| prevTile |
-	Transcript
+	"Transcript
 		show:
 			'----- scan for quadrant ' , quadrant asString , ' row '
 				, row asString;
-		cr.
+		cr."
 	prevTile := nil.
 	row tiles
 		do: [ :tile | 
